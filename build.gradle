@@ -54,6 +54,6 @@ dependencies {
     compile "io.ktor:ktor-client-logging-jvm:$ktor_version"
     testCompile "io.ktor:ktor-server-tests:$ktor_version"
 
-
+    compile 'org.jetbrains.exposed:exposed:0.17.7'
     compile 'com.vk.api:sdk:0.5.12'
 }
