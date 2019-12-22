@@ -9,20 +9,20 @@ import com.vk.api.sdk.objects.UserAuthResponse
 object VKClient {
 
     private val client: VkApiClient
-    private lateinit var actor: UserActor
+    private var actor: UserActor =  UserActor(0, "")
 
     private val APP_ID = 5635196
     private val CLIENT_SECRET = "JsHPWPtqyk7PNadNgQbZ"
-    private val code = "db735ac9f0bed93572"
+    private val code = "d2f00f87395a35d75a"
     private val REDIRECT_URL = "http://localhost:8090/auth/vk"
 
     init {
         val transportClient: TransportClient = HttpTransportClient.getInstance()
         client = VkApiClient(transportClient)
 
-        val userId = 26547370
-        val token = "ff407d20f5487eb1fcd938e68cdab1ddcef5a64e8ad6f1ebd9ffc1e38b59fa484244183f7b995e30d9069"
-        actor = UserActor(userId, token)
+//        val userId = 26547370
+//        val token = "ff407d20f5487eb1fcd938e68cdab1ddcef5a64e8ad6f1ebd9ffc1e38b59fa484244183f7b995e30d9069"
+//        actor = UserActor(userId, token)
 
 //        try {
 //            auth()
@@ -37,7 +37,7 @@ object VKClient {
     *
     * */
 
-    private fun auth() {
+    fun auth(code: String): String {
         val authResponse: UserAuthResponse = client.oauth()
             .userAuthorizationCodeFlow(
                 APP_ID,
@@ -48,6 +48,7 @@ object VKClient {
             .execute()
 
         actor = UserActor(authResponse.userId, authResponse.accessToken)
+        return authResponse.accessToken
     }
 
     fun getDatabaseClient() = client.database()

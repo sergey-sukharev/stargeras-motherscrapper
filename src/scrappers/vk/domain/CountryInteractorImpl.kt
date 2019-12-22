@@ -17,7 +17,7 @@ class CountryInteractorImpl(val databaseClient: Database, val actor: UserActor) 
 
     override fun loadCountries(): List<Country> {
         val countriesModelList = mutableListOf<Country>()
-        getCountryListFromVk(countriesModelList)
+//        getCountryListFromVk(countriesModelList)
         repository.saveCountries(countriesModelList)
         return countriesModelList
     }
