@@ -56,4 +56,6 @@ dependencies {
 
     compile 'org.jetbrains.exposed:exposed:0.17.7'
     compile 'com.vk.api:sdk:0.5.12'
+
+    compile("org.xerial:sqlite-jdbc:3.21.0.1")
 }
