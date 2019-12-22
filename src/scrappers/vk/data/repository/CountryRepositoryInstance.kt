@@ -16,7 +16,7 @@ object CountryRepositoryInstance: CountryRepository {
     }
 
     override fun getCountries(): List<Country> {
-        return listOf();
+        return dao.getCountries()
     }
 
     override fun saveRegions(country: Country, regions: List<Region>) {

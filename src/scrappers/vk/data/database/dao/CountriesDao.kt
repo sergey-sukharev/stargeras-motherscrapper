@@ -4,4 +4,5 @@ import scrappers.vk.domain.model.Country
 
 interface CountriesDao {
     fun saveCountries(countries: List<Country>)
+    fun getCountries(): List<Country>
 }

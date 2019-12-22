@@ -18,11 +18,19 @@ class CountryInteractorImpl(val databaseClient: Database, val actor: UserActor) 
     override fun loadCountries(): List<Country> {
         val countriesModelList = mutableListOf<Country>()
 //        getCountryListFromVk(countriesModelList)
+        countriesModelList.add(Country(UUID.randomUUID().toString(),
+            1, "Russia"))
+        countriesModelList.add(Country(UUID.randomUUID().toString(),
+            2, "USA"))
         repository.saveCountries(countriesModelList)
-        return countriesModelList
+
+
+
+        return repository.getCountries()
     }
 
-    private fun getCountryListFromVk(countriesModelList: MutableList<Country>, count: Int = 100, offset: Int = 0) {
+    private fun getCountryListFromVk(countriesModelList: MutableList<Country>,
+                                     count: Int = 100, offset: Int = 0) {
         val responseBuilder = databaseClient.getCountries(actor).apply {
             needAll(true)
             count(count)

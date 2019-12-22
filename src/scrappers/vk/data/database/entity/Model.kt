@@ -3,7 +3,7 @@ package scrappers.vk.data.database.entity
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
-object Country : Table() {
+object CountryModel : Table() {
     override val tableName: String
         get() = "country"
 
@@ -13,7 +13,7 @@ object Country : Table() {
     val updateTime = long("update_time")
 }
 
-object Region : Table() {
+object RegionModel : Table() {
     override val tableName: String
         get() = "region"
 
@@ -21,10 +21,10 @@ object Region : Table() {
     val id = integer("id").primaryKey() // Column<String>
     val name = varchar("name", length = 50) // Column<String>
     val updateTime = long("update_time")
-    val country = integer("country_id") references Country.id
+    val country = integer("country_id") references CountryModel.id
 }
 
-object City : Table() {
+object CityModel : Table() {
     override val tableName: String
         get() = "city"
 
@@ -34,10 +34,10 @@ object City : Table() {
     val area = varchar("area", 50)
     val regionName = varchar("region", 50)
     val updateTime = long("update_time")
-    val region = integer("region_id") references Region.id
+    val region = integer("region_id") references RegionModel.id
 }
 
-object UpdateHistory: Table() {
+object UpdateHistoryModel: Table() {
     override val tableName: String
         get() = "update_history"
 
@@ -52,6 +52,6 @@ object UpdateHistory: Table() {
 }
 fun createTable() {
     transaction {
-        SchemaUtils.create(Country, Region, City, UpdateHistory)
+        SchemaUtils.create(CountryModel, RegionModel, CityModel, UpdateHistoryModel)
     }
 }
