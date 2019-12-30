@@ -2,10 +2,10 @@ package scrappers.vk.domain
 
 import com.vk.api.sdk.actions.Database
 import com.vk.api.sdk.client.actors.UserActor
-import scrappers.vk.data.apiclient.VKClient
 import scrappers.vk.data.repository.CountryRepository
 import scrappers.vk.data.repository.CountryRepositoryInstance
 import scrappers.vk.domain.model.Country
+import scrappers.vk.domain.model.Region
 import java.util.*
 
 class CountryInteractorImpl(val databaseClient: Database, val actor: UserActor) : CountryInteractor {
@@ -29,8 +29,10 @@ class CountryInteractorImpl(val databaseClient: Database, val actor: UserActor) 
         return repository.getCountries()
     }
 
-    private fun getCountryListFromVk(countriesModelList: MutableList<Country>,
-                                     count: Int = 100, offset: Int = 0) {
+    private fun getCountryListFromVk(
+        countriesModelList: MutableList<Country>,
+        count: Int = 100, offset: Int = 0
+    ) {
         val responseBuilder = databaseClient.getCountries(actor).apply {
             needAll(true)
             count(count)
@@ -52,8 +54,39 @@ class CountryInteractorImpl(val databaseClient: Database, val actor: UserActor) 
             getCountryListFromVk(countriesModelList, count, offset + count)
     }
 
-    override fun loadRegions(country: Int, count: Int, offset: Int) {
+    override fun loadRegions(countryId: Int, count: Int, offset: Int) {
+        val regionModelList = mutableListOf<Region>()
+        val country = repository.getCountryById(countryId)
+        country?.let {
+            getRegionListFromVk(regionModelList, it, count, offset)
+            repository.saveRegions(it, regionModelList)
+        }
+    }
 
+    private fun getRegionListFromVk(
+        regionModelList: MutableList<Region>, country: Country,
+        count: Int = 1000, offset: Int = 0
+    ) {
+        val responseBuilder = databaseClient.getRegions(actor, country.id).apply {
+            count(count)
+            offset(offset)
+        }
+
+        val countriesResultExecutor = responseBuilder.execute()
+        val countriesResultList = countriesResultExecutor.items
+        countriesResultList.forEach {
+            regionModelList.add(
+                Region(
+                    UUID.randomUUID().toString(),
+                    country,
+                    it.id,
+                    it.title
+                )
+            )
+        }
+
+        if (countriesResultExecutor.count > regionModelList.size)
+            getRegionListFromVk(regionModelList, country, count, offset + count)
     }
 
     override fun loadCities(region: Int, count: Int, offset: Int) {

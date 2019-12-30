@@ -9,6 +9,7 @@ import scrappers.vk.data.database.entity.RegionModel
 import scrappers.vk.data.database.entity.RegionTypeEntity
 import scrappers.vk.data.database.entity.createTable
 import scrappers.vk.domain.model.Country
+import scrappers.vk.domain.model.Region
 import scrappers.vk.domain.model.RegionType
 import java.sql.Connection
 import java.util.*
@@ -79,6 +80,19 @@ object CountriesDatabase : CountriesDao {
         return countries
     }
 
+    override fun getCountryById(id: Int): Country? {
+        var country: Country? = null
+
+        transaction {
+            val result = RegionModel.select({RegionModel.id eq id}).single()
+            result?.let {
+                country = Country(result[RegionModel.uuid], result[RegionModel.id], result[RegionModel.name])
+            }
+        }
+
+        return country
+    }
+
     override fun getRegionTypes(): List<RegionType> {
 
         if (regionTypeList.size > 0) return regionTypeList
@@ -118,4 +132,29 @@ object CountriesDatabase : CountriesDao {
         }
     }
 
+
+    override fun saveRegions(country: Country, regions: List<Region>) {
+        val regionTypes = getRegionTypes().map { it.name to it.id }.toMap()
+        val regionId = regionTypes.get("region") ?: throw NullPointerException()
+
+        transaction {
+            for (reg in regions) {
+                if (hasRegionInDbById(reg.id)) {
+                    RegionModel.update({ RegionModel.id eq reg.id}) {
+                        it[name] = reg.name
+                        it[region] = reg.country.id
+                    }
+                } else {
+                    RegionModel.insert {
+                        it[uuid] = reg.uuid
+                        it[id] = reg.id
+                        it[name] = reg.name
+                        it[regionType] = regionId
+                        it[region] = reg.country.id
+                    }
+                }
+
+            }
+        }
+    }
 }

@@ -20,8 +20,12 @@ object CountryRepositoryInstance: CountryRepository {
         return dao.getCountries()
     }
 
-    override fun saveRegions(country: Country, regions: List<Region>) {
+    override fun getCountryById(id: Int): Country? {
+        return dao.getCountryById(id)
+    }
 
+    override fun saveRegions(country: Country, regions: List<Region>) {
+        dao.saveRegions(country, regions)
     }
 
     override fun getRegions(country: Country): List<Region> {

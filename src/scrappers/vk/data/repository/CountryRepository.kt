@@ -8,6 +8,8 @@ import scrappers.vk.domain.model.RegionType
 interface CountryRepository {
     fun saveCountries(countries: List<Country>)
     fun getCountries(): List<Country>
+    fun getCountryById(id: Int): Country?
+
     fun saveRegions(country: Country, regions: List<Region>)
     fun getRegions(country: Country): List<Region>
     fun saveCity(region: Region, city: List<City>)
