@@ -1,18 +1,23 @@
 package scrappers.vk.data.database
 
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.sqlite.SQLiteException
 import scrappers.vk.data.database.dao.CountriesDao
-import scrappers.vk.data.database.entity.CountryModel
+import scrappers.vk.data.database.entity.RegionModel
+import scrappers.vk.data.database.entity.RegionTypeEntity
 import scrappers.vk.data.database.entity.createTable
 import scrappers.vk.domain.model.Country
+import scrappers.vk.domain.model.RegionType
 import java.sql.Connection
+import java.util.*
 
 object CountriesDatabase : CountriesDao {
 
     private lateinit var database: Database
+
+    private val regionTypeList = mutableListOf<RegionType>()
 
     init {
         try {
@@ -21,29 +26,45 @@ object CountriesDatabase : CountriesDao {
                 Connection.TRANSACTION_SERIALIZABLE // Or Connection.TRANSACTION_READ_UNCOMMITTED
 
             createTable()
+            loadTypes()
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
     override fun saveCountries(countries: List<Country>) {
+        val regionTypes = getRegionTypes().map { it.name to it.id }.toMap()
+        val regionId = regionTypes.get("country") ?: throw NullPointerException()
+
         transaction {
-            CountryModel.batchInsertOnDuplicateKeyUpdate( countries,
-                listOf(CountryModel.id, CountryModel.name, CountryModel.updateTime) ) { batch, country ->
-                batch[id] = country.id
-                batch[uuid] = country.uuid
-                batch[name] = country.name
-                batch[updateTime] = System.currentTimeMillis() / 1000
+            for (country in countries) {
+                if (hasRegionInDbById(country.id)) {
+                    RegionModel.update({ RegionModel.id eq country.id}) {
+                        it[name] = country.name
+                    }
+                } else {
+                    RegionModel.insert {
+                        it[uuid] = country.uuid
+                        it[id] = country.id
+                        it[name] = country.name
+                        it[regionType] = regionId
+                        it[region] = country.id
+                    }
+                }
+
             }
-//            for (country in countries) {
-//                CountryModel.batchInsertOnDuplicateKeyUpdate {
-//                    it[uuid] = country.uuid
-//                    it[id] = country.id
-//                    it[name] = country.name
-//                    it[updateTime] = System.currentTimeMillis() / 1000
-//                }
-//            }
         }
+
+    }
+
+    private fun hasRegionInDbById(id: Int): Boolean {
+        return !RegionModel.select {
+            RegionModel.id.eq(id)
+        }.empty()
+    }
+
+    private fun updateCountries(countries: List<Country>) {
+
     }
 
     /**
@@ -52,40 +73,49 @@ object CountriesDatabase : CountriesDao {
     override fun getCountries(): List<Country> {
         val countries = mutableListOf<Country>()
         transaction {
-            for (city in CountryModel.selectAll()) {
-                countries.add(
-                    Country(
-                        city[CountryModel.uuid],
-                        city[CountryModel.id],
-                        city[CountryModel.name]
-                    )
-                )
-            }
+
         }
 
         return countries
     }
 
-    // The below code is just a copy-paste that should actually be in the lib
-    class BatchInsertUpdateOnDuplicate(table: Table, val onDupUpdate: List<Column<*>>) : BatchInsertStatement(table, false) {
-        override fun prepareSQL(transaction: Transaction): String {
-            val onUpdateSQL = if (onDupUpdate.isNotEmpty()) {
-                " ON DUPLICATE KEY UPDATE " + onDupUpdate.joinToString { "${transaction.identity(it)}=VALUES(${transaction.identity(it)})" }
-            } else ""
-            return super.prepareSQL(transaction) + onUpdateSQL
+    override fun getRegionTypes(): List<RegionType> {
+
+        if (regionTypeList.size > 0) return regionTypeList
+
+        transaction {
+            for (regionType in RegionTypeEntity.selectAll()) {
+                regionTypeList.add(
+                    RegionType(
+                        regionType[RegionTypeEntity.uuid],
+                        regionType[RegionTypeEntity.name]
+                    )
+                )
+            }
+        }
+
+        return regionTypeList
+    }
+
+    /**
+     * Предзагрузка регион-типов
+     */
+    private fun loadTypes() {
+
+        transaction {
+            RegionTypeEntity.insertIgnore {
+                it[name] = "country"
+                it[uuid] = UUID.randomUUID().toString()
+            }
+            RegionTypeEntity.insertIgnore {
+                it[name] = "region"
+                it[uuid] = UUID.randomUUID().toString()
+            }
+            RegionTypeEntity.insertIgnore {
+                it[name] = "city"
+                it[uuid] = UUID.randomUUID().toString()
+            }
         }
     }
 
-    fun <T : Table, E> T.batchInsertOnDuplicateKeyUpdate(data: List<E>, onDupUpdateColumns: List<Column<*>>, body: T.(BatchInsertUpdateOnDuplicate, E) -> Unit) {
-        data.
-            takeIf { it.isNotEmpty() }?.
-            let {
-                val insert = BatchInsertUpdateOnDuplicate(this, onDupUpdateColumns)
-                data.forEach {
-                    insert.addBatch()
-                    body(insert, it)
-                }
-                TransactionManager.current().exec(insert)
-            }
-    }
 }

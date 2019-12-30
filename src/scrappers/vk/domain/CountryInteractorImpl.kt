@@ -2,6 +2,7 @@ package scrappers.vk.domain
 
 import com.vk.api.sdk.actions.Database
 import com.vk.api.sdk.client.actors.UserActor
+import scrappers.vk.data.apiclient.VKClient
 import scrappers.vk.data.repository.CountryRepository
 import scrappers.vk.data.repository.CountryRepositoryInstance
 import scrappers.vk.domain.model.Country
@@ -16,15 +17,14 @@ class CountryInteractorImpl(val databaseClient: Database, val actor: UserActor) 
     }
 
     override fun loadCountries(): List<Country> {
+
         val countriesModelList = mutableListOf<Country>()
-//        getCountryListFromVk(countriesModelList)
-        countriesModelList.add(Country(UUID.randomUUID().toString(),
-            1, "Russia"))
-        countriesModelList.add(Country(UUID.randomUUID().toString(),
-            2, "USA"))
+        getCountryListFromVk(countriesModelList)
+//        countriesModelList.add(Country(UUID.randomUUID().toString(),
+//            1, "Россия"))
+//        countriesModelList.add(Country(UUID.randomUUID().toString(),
+//            2, "USA"))
         repository.saveCountries(countriesModelList)
-
-
 
         return repository.getCountries()
     }

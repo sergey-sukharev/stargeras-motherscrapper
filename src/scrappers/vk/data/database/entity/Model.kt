@@ -3,14 +3,11 @@ package scrappers.vk.data.database.entity
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
-object CountryModel : Table() {
+object RegionTypeEntity: Table() {
     override val tableName: String
-        get() = "country"
-
+        get() = "region_type"
     val uuid = varchar("uuid", 36)
-    val id = integer("id").primaryKey() // Column<String>
-    val name = varchar("name", length = 50) // Column<String>
-    val updateTime = long("update_time")
+    val name = varchar("name", 30).primaryKey()
 }
 
 object RegionModel : Table() {
@@ -18,23 +15,12 @@ object RegionModel : Table() {
         get() = "region"
 
     val uuid = varchar("uuid", 36)
-    val id = integer("id").primaryKey() // Column<String>
-    val name = varchar("name", length = 50) // Column<String>
-    val updateTime = long("update_time")
-    val country = integer("country_id") references CountryModel.id
-}
-
-object CityModel : Table() {
-    override val tableName: String
-        get() = "city"
-
-    val uuid = varchar("uuid", 36)
-    val id = integer("id").primaryKey() // Column<String>
-    val name = varchar("name", length = 50) // Column<String>
-    val area = varchar("area", 50)
-    val regionName = varchar("region", 50)
-    val updateTime = long("update_time")
+    val id = integer("id").primaryKey()
+    val name = varchar("name", length = 50)
+    val area = varchar("area", 50).nullable()
+    val regionName = varchar("region", 50).nullable()
     val region = integer("region_id") references RegionModel.id
+    val regionType = varchar("region_type", 36) references RegionTypeEntity.uuid
 }
 
 object UpdateHistoryModel: Table() {
@@ -48,10 +34,9 @@ object UpdateHistoryModel: Table() {
     val isLoaded = bool("is_loaded")
     val lastUpdateTime = long("last_update_time")
 
-
 }
 fun createTable() {
     transaction {
-        SchemaUtils.create(CountryModel, RegionModel, CityModel, UpdateHistoryModel)
+        SchemaUtils.create(RegionModel, UpdateHistoryModel)
     }
 }

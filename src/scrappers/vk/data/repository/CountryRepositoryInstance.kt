@@ -5,6 +5,7 @@ import scrappers.vk.data.database.dao.CountriesDao
 import scrappers.vk.domain.model.City
 import scrappers.vk.domain.model.Country
 import scrappers.vk.domain.model.Region
+import scrappers.vk.domain.model.RegionType
 
 object CountryRepositoryInstance: CountryRepository {
 
@@ -33,5 +34,9 @@ object CountryRepositoryInstance: CountryRepository {
 
     override fun getCities(region: Region): List<City> {
         return listOf()
+    }
+
+    override fun getRegionTypes(): List<RegionType> {
+        return dao.getRegionTypes()
     }
 }
