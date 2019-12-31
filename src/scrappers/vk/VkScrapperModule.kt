@@ -1,5 +1,6 @@
 package scrappers.vk
 
+import com.vk.api.sdk.exceptions.ApiAuthException
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
@@ -49,10 +50,7 @@ fun Application.vkScrapperModule() {
 
         get("/countries/") {
             val interactor: RegionLoaderInteractor =
-                RegionLoaderInteractorImpl(
-                    VKClient.getDatabaseClient(),
-                    VKClient.getActor()
-                )
+                RegionLoaderInteractorImpl()
             val countries = interactor.loadCountries()
             call.respondText { "$countries" }
         }
@@ -66,11 +64,7 @@ fun Application.vkScrapperModule() {
 
             val request = call.receive<RegionLoadRequest>()
 
-            val interactor: RegionLoaderInteractor =
-                RegionLoaderInteractorImpl(
-                    VKClient.getDatabaseClient(),
-                    VKClient.getActor()
-                )
+            val interactor: RegionLoaderInteractor = RegionLoaderInteractorImpl()
 
             interactor.loadRegions(request.country)
         }
@@ -78,12 +72,23 @@ fun Application.vkScrapperModule() {
         post("/cities/load/") {
             val request = call.receive<CitiesLoadRequest>()
             val interactor: RegionLoaderInteractor =
-                RegionLoaderInteractorImpl(
-                    VKClient.getDatabaseClient(),
-                    VKClient.getActor()
-                )
+                RegionLoaderInteractorImpl()
 
             interactor.loadCities(request.region)
+        }
+
+        get("/loader/deep/{id}") {
+            val id = call.parameters["id"]
+            id?.let {
+                val interactor: RegionLoaderInteractor = RegionLoaderInteractorImpl()
+                try {
+                    interactor.deepLoadByCountry(id.toInt())
+                } catch (e: ApiAuthException) {
+                    call.respond(HttpStatusCode.NonAuthoritativeInformation, "Необходима авторизация в ВК")
+                }
+
+            }
+
         }
     }
 }

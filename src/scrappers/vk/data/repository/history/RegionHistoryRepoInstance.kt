@@ -1,8 +1,10 @@
 package scrappers.vk.data.repository.history
 
+import org.h2.command.dml.Update
 import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import scrappers.vk.data.database.CountriesDatabase
 import scrappers.vk.data.database.entity.UpdateHistoryModel
@@ -17,21 +19,20 @@ object RegionHistoryRepoInstance : RegionHistoryRepository {
      */
     override fun getHistory(id: Int): RegionHistory? {
 
-        var queryResult : Query? = null
+        var resultHistory : RegionHistory? = null
 
         transaction {
-            queryResult = UpdateHistoryModel.select {UpdateHistoryModel.id eq id}
-        }
+            val queryResult = UpdateHistoryModel.select {UpdateHistoryModel.id eq id}
+            if (queryResult.empty()) return@transaction
 
-        queryResult?.let {
-            if (it.empty()) return null
-            val result = it.single()
-            return RegionHistory(result[UpdateHistoryModel.id], result[UpdateHistoryModel.uuid],
+            val result = queryResult.single()
+            resultHistory = RegionHistory(result[UpdateHistoryModel.id], result[UpdateHistoryModel.uuid],
                 result[UpdateHistoryModel.itemsCount], result[UpdateHistoryModel.itemsLoaded],
                 result[UpdateHistoryModel.isLoaded], result[UpdateHistoryModel.lastUpdateTime])
         }
 
-        return null
+
+        return resultHistory
     }
 
     override fun saveHistory(history: RegionHistory) {
@@ -49,6 +50,18 @@ object RegionHistoryRepoInstance : RegionHistoryRepository {
     }
 
     override fun getHistoryAll(): List<RegionHistory> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val result = mutableListOf<RegionHistory>()
+
+        transaction {
+            UpdateHistoryModel.selectAll().forEach {
+                result.add(
+                    RegionHistory(it[UpdateHistoryModel.id], it[UpdateHistoryModel.uuid],
+                        it[UpdateHistoryModel.itemsCount], it[UpdateHistoryModel.itemsLoaded],
+                        it[UpdateHistoryModel.isLoaded], it[UpdateHistoryModel.lastUpdateTime])
+                )
+            }
+        }
+
+        return result
     }
 }

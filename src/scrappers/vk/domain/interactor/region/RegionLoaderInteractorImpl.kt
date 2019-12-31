@@ -1,18 +1,24 @@
 package scrappers.vk.domain.interactor.region
 
+import scrappers.vk.data.repository.RegionNotFoundException
+import scrappers.vk.data.repository.history.RegionHistoryRepoInstance
+import scrappers.vk.data.repository.history.RegionHistoryRepository
 import scrappers.vk.data.repository.region.RegionRepository
 import scrappers.vk.data.repository.region.RegionRepositoryInstance
 import scrappers.vk.domain.VkRegionLoader
 import scrappers.vk.domain.model.City
 import scrappers.vk.domain.model.Country
 import scrappers.vk.domain.model.Region
+import scrappers.vk.domain.model.RegionHistory
 
 class RegionLoaderInteractorImpl : RegionLoaderInteractor {
 
     private val repository: RegionRepository
+    private val updateRepository: RegionHistoryRepository
 
     init {
         repository = RegionRepositoryInstance
+        updateRepository = RegionHistoryRepoInstance
     }
 
     override fun loadCountries(): List<Country> {
@@ -26,16 +32,46 @@ class RegionLoaderInteractorImpl : RegionLoaderInteractor {
         val regionModelList = mutableListOf<Region>()
         val country = repository.getCountryById(countryId)
         country?.let {
-            VkRegionLoader.loadRegions(it, regionModelList, count, offset)
+            val regionCount = VkRegionLoader.loadRegions(it, regionModelList, count, offset)
+            updateRepository.saveHistory(RegionHistory(it.id, it.uuid, regionCount,
+                regionModelList.size, true, System.currentTimeMillis()/1000))
             repository.saveRegions(it, regionModelList)
         }
     }
 
     override fun loadCities(regionId: Int, count: Int, offset: Int) {
         val region = repository.getRegionById(regionId)
+
     }
 
-    override fun deepLoadByCountry(id: Int) {
+    /**
+     *  Глубокое обновление городов по стране
+     */
+    override fun deepLoadByCountry(id: Int, fullUpdate: Boolean) {
+        val country = repository.getCountryById(id) ?: throw RegionNotFoundException()
+        var countryHistory = updateRepository.getHistory(country.id)
+
+        countryHistory ?: loadRegions(country.id)
+
+        countryHistory = updateRepository.getHistory(country.id)
+
+        val regions = repository.getRegions(country)
+        val regionsHistory = updateRepository.getHistoryAll().map { it.id to it }.toMap()
+
+        for (region in regions) {
+            if (regionsHistory.get(region.id) == null || !regionsHistory.get(region.id)!!.isLoaded) {
+                val citiesList = mutableListOf<City>()
+                val count = VkRegionLoader.loadCities(region, citiesList)
+                repository.saveCity(region, citiesList)
+                updateRepository.saveHistory(
+                    RegionHistory(region.id, region.uuid,
+                    count, citiesList.size, true, System.currentTimeMillis()/1000)
+                )
+            }
+
+            Thread.sleep(2000)
+        }
+
 
     }
 

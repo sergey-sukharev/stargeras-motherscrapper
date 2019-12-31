@@ -20,9 +20,9 @@ object RegionModel : Table() {
 
     val uuid = varchar("uuid", 36)
     val id = integer("id").primaryKey()
-    val name = varchar("name", length = 50)
-    val area = varchar("area", 50).nullable()
-    val regionName = varchar("region", 50).nullable()
+    val name = varchar("name", 150)
+    val area = varchar("area", 100).nullable()
+    val regionName = varchar("region", 100).nullable()
     val region = integer("region_id") references RegionModel.id
     val regionType = varchar("region_type", 36) references RegionTypeEntity.uuid
 }

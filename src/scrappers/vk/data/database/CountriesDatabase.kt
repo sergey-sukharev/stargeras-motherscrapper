@@ -8,10 +8,7 @@ import scrappers.vk.data.database.dao.RegionHistoryDao
 import scrappers.vk.data.database.entity.RegionModel
 import scrappers.vk.data.database.entity.RegionTypeEntity
 import scrappers.vk.data.database.entity.createTable
-import scrappers.vk.domain.model.Country
-import scrappers.vk.domain.model.Region
-import scrappers.vk.domain.model.RegionHistory
-import scrappers.vk.domain.model.RegionType
+import scrappers.vk.domain.model.*
 import java.sql.Connection
 import java.util.*
 import kotlin.NoSuchElementException
@@ -36,7 +33,6 @@ object CountriesDatabase : CountriesDao, RegionHistoryDao {
     }
 
 
-
     override fun saveCountries(countries: List<Country>) {
         val regionTypes = getRegionTypes().map { it.name to it.id }.toMap()
         val regionId = regionTypes.get("region") ?: throw NullPointerException()
@@ -44,7 +40,7 @@ object CountriesDatabase : CountriesDao, RegionHistoryDao {
         transaction {
             for (country in countries) {
                 if (hasRegionInDbById(country.id)) {
-                    RegionModel.update({ RegionModel.id eq country.id}) {
+                    RegionModel.update({ RegionModel.id eq country.id }) {
                         it[name] = country.name
                     }
                 } else {
@@ -88,7 +84,7 @@ object CountriesDatabase : CountriesDao, RegionHistoryDao {
         var country: Country? = null
 
         transaction {
-            val result = RegionModel.select({RegionModel.id eq id}).single()
+            val result = RegionModel.select({ RegionModel.id eq id }).single()
             result?.let {
                 country = Country(result[RegionModel.uuid], result[RegionModel.id], result[RegionModel.name])
             }
@@ -98,17 +94,30 @@ object CountriesDatabase : CountriesDao, RegionHistoryDao {
     }
 
     override fun getRegionById(id: Int): Region {
-        var region : Region? = null
+        var region: Region? = null
 
         transaction {
-            val res = RegionModel.select {RegionModel.id eq id}.single()
+            val res = RegionModel.select { RegionModel.id eq id }.single()
             getCountryById(res[RegionModel.region])?.let {
-                region = Region(res[RegionModel.uuid], it, res[RegionModel.id],
-                    res[RegionModel.name])
+                region = Region(
+                    res[RegionModel.uuid], it, res[RegionModel.id],
+                    res[RegionModel.name]
+                )
             }
         }
 
         return region ?: throw NoSuchElementException()
+    }
+
+    override fun getRegions(country: Country): List<Region> {
+        val regions = mutableListOf<Region>()
+        transaction {
+            RegionModel.select({RegionModel.region eq country.id}).forEach {
+                regions.add(Region(it[RegionModel.uuid], country, it[RegionModel.id], it[RegionModel.name]))
+            }
+        }
+
+        return regions
     }
 
     override fun getRegionTypes(): List<RegionType> {
@@ -158,7 +167,7 @@ object CountriesDatabase : CountriesDao, RegionHistoryDao {
         transaction {
             for (reg in regions) {
                 if (hasRegionInDbById(reg.id)) {
-                    RegionModel.update({ RegionModel.id eq reg.id}) {
+                    RegionModel.update({ RegionModel.id eq reg.id }) {
                         it[name] = reg.name
                         it[region] = reg.country.id
                     }
@@ -169,6 +178,35 @@ object CountriesDatabase : CountriesDao, RegionHistoryDao {
                         it[name] = reg.name
                         it[regionType] = regionId
                         it[region] = reg.country.id
+                    }
+                }
+
+            }
+        }
+
+    }
+
+    override fun saveCities(region: Region, cities: List<City>) {
+        val regionTypes = getRegionTypes().map { it.name to it.id }.toMap()
+        val regionId = regionTypes.get("city") ?: throw NullPointerException()
+
+        transaction {
+            for (reg in cities) {
+                if (hasRegionInDbById(reg.id)) {
+                    RegionModel.update({ RegionModel.id eq reg.id }) {
+                        it[name] = reg.name
+                        it[RegionModel.region] = reg.region.id
+                    }
+                } else {
+                    RegionModel.insert {
+                        it[uuid] = reg.uuid
+                        it[id] = reg.id
+                        it[name] = reg.name
+                        it[regionType] = regionId
+                        it[RegionModel.region] = reg.region.id
+                        it[RegionModel.region] = reg.region.id
+                        it[area] = reg.area
+                        it[regionName] = reg.regionName
                     }
                 }
 
