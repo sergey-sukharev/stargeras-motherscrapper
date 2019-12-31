@@ -1,9 +1,12 @@
 package scrappers.vk.data.database.entity
 
+import org.jetbrains.exposed.dao.Entity
+import org.jetbrains.exposed.dao.EntityClass
+import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
-object RegionTypeEntity: Table() {
+object RegionTypeEntity : Table() {
     override val tableName: String
         get() = "region_type"
     val uuid = varchar("uuid", 36)
@@ -11,6 +14,7 @@ object RegionTypeEntity: Table() {
 }
 
 object RegionModel : Table() {
+
     override val tableName: String
         get() = "region"
 
@@ -35,6 +39,7 @@ object UpdateHistoryModel: Table() {
     val lastUpdateTime = long("last_update_time")
 
 }
+
 fun createTable() {
     transaction {
         SchemaUtils.create(RegionModel, UpdateHistoryModel)

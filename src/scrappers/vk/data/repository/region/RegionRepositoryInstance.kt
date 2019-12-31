@@ -1,4 +1,4 @@
-package scrappers.vk.data.repository
+package scrappers.vk.data.repository.region
 
 import scrappers.vk.data.database.CountriesDatabase
 import scrappers.vk.data.database.dao.CountriesDao
@@ -7,7 +7,7 @@ import scrappers.vk.domain.model.Country
 import scrappers.vk.domain.model.Region
 import scrappers.vk.domain.model.RegionType
 
-object CountryRepositoryInstance: CountryRepository {
+object RegionRepositoryInstance: RegionRepository {
 
     private val dao: CountriesDao = CountriesDatabase
 
@@ -30,6 +30,10 @@ object CountryRepositoryInstance: CountryRepository {
 
     override fun getRegions(country: Country): List<Region> {
         return listOf()
+    }
+
+    override fun getRegionById(regionId: Int): Region {
+        return dao.getRegionById(regionId)
     }
 
     override fun saveCity(region: Region, city: List<City>) {

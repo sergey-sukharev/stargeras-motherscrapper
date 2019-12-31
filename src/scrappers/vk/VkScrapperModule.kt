@@ -14,9 +14,10 @@ import io.ktor.response.respondRedirect
 import io.ktor.response.respondText
 import io.ktor.routing.*
 import scrappers.vk.data.apiclient.VKClient
+import scrappers.vk.data.apiclient.model.country.region.CitiesLoadRequest
 import scrappers.vk.data.apiclient.model.country.region.RegionLoadRequest
-import scrappers.vk.domain.CountryInteractor
-import scrappers.vk.domain.CountryInteractorImpl
+import scrappers.vk.domain.interactor.region.RegionLoaderInteractor
+import scrappers.vk.domain.interactor.region.RegionLoaderInteractorImpl
 import scrappers.vk.domain.model.Country
 
 
@@ -47,10 +48,11 @@ fun Application.vkScrapperModule() {
         }
 
         get("/countries/") {
-            val interactor: CountryInteractor = CountryInteractorImpl(
-                VKClient.getDatabaseClient(),
-                VKClient.getActor()
-            )
+            val interactor: RegionLoaderInteractor =
+                RegionLoaderInteractorImpl(
+                    VKClient.getDatabaseClient(),
+                    VKClient.getActor()
+                )
             val countries = interactor.loadCountries()
             call.respondText { "$countries" }
         }
@@ -64,12 +66,24 @@ fun Application.vkScrapperModule() {
 
             val request = call.receive<RegionLoadRequest>()
 
-            val interactor: CountryInteractor = CountryInteractorImpl(
-                VKClient.getDatabaseClient(),
-                VKClient.getActor()
-            )
+            val interactor: RegionLoaderInteractor =
+                RegionLoaderInteractorImpl(
+                    VKClient.getDatabaseClient(),
+                    VKClient.getActor()
+                )
 
             interactor.loadRegions(request.country)
+        }
+
+        post("/cities/load/") {
+            val request = call.receive<CitiesLoadRequest>()
+            val interactor: RegionLoaderInteractor =
+                RegionLoaderInteractorImpl(
+                    VKClient.getDatabaseClient(),
+                    VKClient.getActor()
+                )
+
+            interactor.loadCities(request.region)
         }
     }
 }
