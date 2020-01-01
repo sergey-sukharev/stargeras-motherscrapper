@@ -160,7 +160,7 @@ object CountriesDatabase : CountriesDao, RegionHistoryDao {
     }
 
 
-    override fun saveRegions(country: Country, regions: List<Region>) {
+    override fun saveRegions(country: Country, regions: List<Region>) : List<Region> {
         val regionTypes = getRegionTypes().map { it.name to it.id }.toMap()
         val regionId = regionTypes.get("region") ?: throw NullPointerException()
 
@@ -184,6 +184,7 @@ object CountriesDatabase : CountriesDao, RegionHistoryDao {
             }
         }
 
+        return getRegions(country)
     }
 
     override fun saveCities(region: Region, cities: List<City>) {
@@ -203,7 +204,6 @@ object CountriesDatabase : CountriesDao, RegionHistoryDao {
                         it[id] = reg.id
                         it[name] = reg.name
                         it[regionType] = regionId
-                        it[RegionModel.region] = reg.region.id
                         it[RegionModel.region] = reg.region.id
                         it[area] = reg.area
                         it[regionName] = reg.regionName

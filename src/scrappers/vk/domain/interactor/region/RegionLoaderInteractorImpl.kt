@@ -15,15 +15,17 @@ class RegionLoaderInteractorImpl : RegionLoaderInteractor {
 
     private val repository: RegionRepository
     private val updateRepository: RegionHistoryRepository
+    private val regionLoader: VkRegionLoader
 
     init {
         repository = RegionRepositoryInstance
         updateRepository = RegionHistoryRepoInstance
+        regionLoader = VkRegionLoader(repository, updateRepository)
     }
 
     override fun loadCountries(): List<Country> {
         val countriesModelList = mutableListOf<Country>()
-        VkRegionLoader.loadCountries(countriesModelList)
+        regionLoader.loadCountries(countriesModelList)
         repository.saveCountries(countriesModelList)
         return repository.getCountries()
     }
@@ -31,11 +33,9 @@ class RegionLoaderInteractorImpl : RegionLoaderInteractor {
     override fun loadRegions(countryId: Int, count: Int, offset: Int) {
         val regionModelList = mutableListOf<Region>()
         val country = repository.getCountryById(countryId)
+
         country?.let {
-            val regionCount = VkRegionLoader.loadRegions(it, regionModelList, count, offset)
-            updateRepository.saveHistory(RegionHistory(it.id, it.uuid, regionCount,
-                regionModelList.size, true, System.currentTimeMillis()/1000))
-            repository.saveRegions(it, regionModelList)
+            regionLoader.loadRegions(it, regionModelList, count, offset)
         }
     }
 
@@ -61,7 +61,7 @@ class RegionLoaderInteractorImpl : RegionLoaderInteractor {
         for (region in regions) {
             if (regionsHistory.get(region.id) == null || !regionsHistory.get(region.id)!!.isLoaded) {
                 val citiesList = mutableListOf<City>()
-                val count = VkRegionLoader.loadCities(region, citiesList)
+                val count = regionLoader.loadCities(region, citiesList)
                 repository.saveCity(region, citiesList)
                 updateRepository.saveHistory(
                     RegionHistory(region.id, region.uuid,

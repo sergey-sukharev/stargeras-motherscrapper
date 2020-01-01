@@ -1,10 +1,7 @@
 package scrappers.vk.data.repository.history
 
 import org.h2.command.dml.Update
-import org.jetbrains.exposed.sql.Query
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import scrappers.vk.data.database.CountriesDatabase
 import scrappers.vk.data.database.entity.UpdateHistoryModel
@@ -36,16 +33,29 @@ object RegionHistoryRepoInstance : RegionHistoryRepository {
     }
 
     override fun saveHistory(history: RegionHistory) {
+        val currentHistory = getHistory(history.id)
 
         transaction {
-            UpdateHistoryModel.insert {
-                it[this.id] = history.id
-                it[this.uuid] = history.uuid
-                it[this.itemsCount] = history.itemsCount
-                it[this.itemsLoaded] = history.itemsLoadedCount
-                it[this.isLoaded] = history.isLoaded
-                it[this.lastUpdateTime] = history.lastUpdateTime
+            if (currentHistory == null) {
+                UpdateHistoryModel.insert {
+                    it[this.id] = history.id
+                    it[this.uuid] = history.uuid
+                    it[this.itemsCount] = history.itemsCount
+                    it[this.itemsLoaded] = history.itemsLoadedCount
+                    it[this.isLoaded] = history.isLoaded
+                    it[this.lastUpdateTime] = history.lastUpdateTime
+                }
+            } else {
+                UpdateHistoryModel.update({
+                    UpdateHistoryModel.id eq history.id
+                }){
+                    it[this.itemsCount] = history.itemsCount
+                    it[this.itemsLoaded] = history.itemsLoadedCount
+                    it[this.isLoaded] = history.isLoaded
+                    it[this.lastUpdateTime] = history.lastUpdateTime
+                }
             }
+
         }
     }
 
