@@ -88,7 +88,15 @@ fun Application.vkScrapperModule() {
                 }
 
             }
+        }
 
+        get("/loader/citiesasregions") {
+            val interactor: RegionLoaderInteractor = RegionLoaderInteractorImpl()
+            try {
+                interactor.loadRegionCities()
+            } catch (e: ApiAuthException) {
+                call.respond(HttpStatusCode.NonAuthoritativeInformation, "Необходима авторизация в ВК")
+            }
         }
     }
 }

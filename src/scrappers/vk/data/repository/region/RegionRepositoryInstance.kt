@@ -36,7 +36,7 @@ object RegionRepositoryInstance: RegionRepository {
         return dao.getRegionById(regionId)
     }
 
-    override fun saveCity(region: Region, city: List<City>) {
+    override fun saveCity(region: Region?, city: List<City>) {
         dao.saveCities(region, city)
     }
 
@@ -44,7 +44,4 @@ object RegionRepositoryInstance: RegionRepository {
         return listOf()
     }
 
-    override fun getRegionTypes(): List<RegionType> {
-        return dao.getRegionTypes()
-    }
 }

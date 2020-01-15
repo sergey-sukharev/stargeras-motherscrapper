@@ -1,33 +1,43 @@
 package scrappers.vk.data.database.entity
 
-import org.jetbrains.exposed.dao.Entity
-import org.jetbrains.exposed.dao.EntityClass
-import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
-object RegionTypeEntity : Table() {
+object CountryModel : Table() {
     override val tableName: String
-        get() = "region_type"
+        get() = "country"
+
     val uuid = varchar("uuid", 36)
-    val name = varchar("name", 30).primaryKey()
+    val id = integer("id").primaryKey() // Column<String>
+    val name = varchar("name", length = 50) // Column<String>
+    val updateTime = long("update_time")
 }
 
 object RegionModel : Table() {
-
     override val tableName: String
         get() = "region"
 
     val uuid = varchar("uuid", 36)
-    val id = integer("id").primaryKey()
-    val name = varchar("name", 150)
-    val area = varchar("area", 100).nullable()
-    val regionName = varchar("region", 100).nullable()
-    val region = integer("region_id") references RegionModel.id
-    val regionType = varchar("region_type", 36) references RegionTypeEntity.uuid
+    val id = integer("id").primaryKey() // Column<String>
+    val name = varchar("name", length = 50) // Column<String>
+    val updateTime = long("update_time")
+    val country = integer("country_id") references CountryModel.id
 }
 
-object UpdateHistoryModel: Table() {
+object CityModel : Table() {
+    override val tableName: String
+        get() = "city"
+
+    val uuid = varchar("uuid", 36)
+    val id = integer("id").primaryKey() // Column<String>
+    val name = varchar("name", length = 256) // Column<String>
+    val area = varchar("area", 50).nullable()
+    val region = varchar("region", 50).nullable()
+    val updateTime = long("update_time")
+    val region_id = varchar("region_id", 36).nullable()
+}
+
+object UpdateHistory: Table() {
     override val tableName: String
         get() = "update_history"
 
@@ -38,10 +48,10 @@ object UpdateHistoryModel: Table() {
     val isLoaded = bool("is_loaded")
     val lastUpdateTime = long("last_update_time")
 
-}
 
+}
 fun createTable() {
     transaction {
-        SchemaUtils.create(RegionModel, UpdateHistoryModel)
+        SchemaUtils.create(CountryModel, RegionModel, CityModel, UpdateHistory)
     }
 }

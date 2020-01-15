@@ -121,5 +121,29 @@ class VkRegionLoader(val regionRepository: RegionRepository, val updateRepositor
         return citiesResultExecutor.count
     }
 
+    fun loadRegionCities(citiesModelList: MutableList<City>,
+        count: Int = 1000, offset: Int = 0) {
+        val country = regionRepository.getCountryById(1)
+        val responseBuilder = databaseClient.getCities(VKClient.getActor(), country!!.id).apply {
+            count(count)
+            offset(offset)
+        }
+
+        val citiesResultExecutor = responseBuilder.execute()
+        val citiesResultList = citiesResultExecutor.items
+        citiesResultList.forEach {
+            citiesModelList.add(
+                City(
+                    UUID.randomUUID().toString(),
+                    null,
+                    it.id,
+                    it.title,
+                    it.area,
+                    it.region
+                )
+            )
+        }
+    }
+
 
 }

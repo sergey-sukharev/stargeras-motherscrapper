@@ -14,9 +14,7 @@ interface RegionRepository {
     fun getRegions(country: Country): List<Region>
     fun getRegionById(regionId: Int): Region
 
-
-    fun saveCity(region: Region, city: List<City>)
+    fun saveCity(region: Region?, city: List<City>)
     fun getCities(region: Region): List<City>
 
-    fun getRegionTypes(): List<RegionType>
 }

@@ -71,8 +71,16 @@ class RegionLoaderInteractorImpl : RegionLoaderInteractor {
 
             Thread.sleep(2000)
         }
+    }
 
-
+    override fun loadRegionCities() {
+        val citiesRegions = mutableListOf<City>()
+        regionLoader.loadRegionCities(citiesRegions)
+        try {
+            repository.saveCity(null, citiesRegions)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
 }

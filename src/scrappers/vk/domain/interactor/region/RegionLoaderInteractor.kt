@@ -8,4 +8,5 @@ interface RegionLoaderInteractor {
     fun loadCities(region: Int, count: Int = 1000, offset: Int = 0)
 
     fun deepLoadByCountry(id: Int, fullUpdate: Boolean = false)
+    fun loadRegionCities()
 }
