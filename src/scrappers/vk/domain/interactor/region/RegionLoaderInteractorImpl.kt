@@ -10,6 +10,7 @@ import scrappers.vk.domain.model.City
 import scrappers.vk.domain.model.Country
 import scrappers.vk.domain.model.Region
 import scrappers.vk.domain.model.RegionHistory
+import java.util.*
 
 class RegionLoaderInteractorImpl : RegionLoaderInteractor {
 
@@ -71,6 +72,22 @@ class RegionLoaderInteractorImpl : RegionLoaderInteractor {
 
             Thread.sleep(2000)
         }
+    }
+
+    override fun loadCrimea() {
+        val country = repository.getCountryById(1)
+        val region = Region(UUID.randomUUID().toString(), country!!, 1500001, "Крым")
+        try {
+            repository.saveRegions(country, listOf(region))
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+
+        val cityList = mutableListOf<City>()
+        val ukRegion = Region("dsad", repository.getCountryById(2)!!, 1500001, "Крым")
+        regionLoader.loadCities(ukRegion, cityList)
+        repository.saveCity(region, cityList)
     }
 
     override fun loadRegionCities() {

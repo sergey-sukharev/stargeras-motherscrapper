@@ -98,5 +98,14 @@ fun Application.vkScrapperModule() {
                 call.respond(HttpStatusCode.NonAuthoritativeInformation, "Необходима авторизация в ВК")
             }
         }
+
+        get("/loader/crimea") {
+            val interactor: RegionLoaderInteractor = RegionLoaderInteractorImpl()
+            try {
+                interactor.loadCrimea()
+            } catch (e: ApiAuthException) {
+                call.respond(HttpStatusCode.NonAuthoritativeInformation, "Необходима авторизация в ВК")
+            }
+        }
     }
 }

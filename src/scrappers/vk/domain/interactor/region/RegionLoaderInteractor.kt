@@ -9,4 +9,5 @@ interface RegionLoaderInteractor {
 
     fun deepLoadByCountry(id: Int, fullUpdate: Boolean = false)
     fun loadRegionCities()
+    fun loadCrimea()
 }
