@@ -75,12 +75,23 @@ class RegionLoaderInteractorImpl : RegionLoaderInteractor {
 
     override fun loadRegionCities() {
         val citiesRegions = mutableListOf<City>()
+        val country = repository.getCountryById(1)
         regionLoader.loadRegionCities(citiesRegions)
         try {
             repository.saveCity(null, citiesRegions)
         } catch (e: Exception) {
             e.printStackTrace()
         }
+
+        //TODO load
+        val cityRegion = citiesRegions.asSequence().map {
+            Region(it.uuid, country!!, it.id, it.name)
+        }.toList().forEach{
+            val citiesList = mutableListOf<City>()
+            val count = regionLoader.loadCities(it, citiesList)
+            repository.saveCity(it, citiesList)
+        }
+
     }
 
 }
