@@ -112,7 +112,7 @@ object CountriesDatabase : CountriesDao, RegionHistoryDao {
     override fun getRegions(country: Country): List<Region> {
         val regions = mutableListOf<Region>()
         transaction {
-            RegionModel.select({ RegionModel.country eq country.id }).forEach {
+            RegionModel.select({ RegionModel.country eq country.uuid }).forEach {
                 regions.add(Region(it[RegionModel.uuid], country, it[RegionModel.id], it[RegionModel.name]))
             }
         }
@@ -127,7 +127,7 @@ object CountriesDatabase : CountriesDao, RegionHistoryDao {
                 if (needUpdate && hasRegionInDbById(reg.id)) {
                     RegionModel.update({ RegionModel.id eq reg.id }) {
                         it[name] = reg.name
-                        it[this.country] = reg.country.id
+                        it[this.country] = reg.country.uuid
                     }
                 } else {
                     RegionModel.insert {
@@ -135,7 +135,7 @@ object CountriesDatabase : CountriesDao, RegionHistoryDao {
                         it[id] = reg.id
                         it[name] = reg.name
                         it[updateTime] = System.currentTimeMillis() / 1000
-                        it[this.country] = reg.country.id
+                        it[this.country] = reg.country.uuid
                     }
                 }
 
@@ -151,14 +151,14 @@ object CountriesDatabase : CountriesDao, RegionHistoryDao {
                 if (hasCityInDbById(reg.id)) {
                     CityModel.update({ CityModel.id eq reg.id }) {
                         it[name] = reg.name
-                        it[region_id] = reg.region?.uuid
+                        it[region_id] = reg.region!!.uuid
                     }
                 } else {
                     CityModel.insert {
                         it[uuid] = reg.uuid
                         it[id] = reg.id
                         it[name] = reg.name
-                        it[region_id] = reg.region?.uuid
+                        it[region_id] = region?.uuid
                         it[area] = reg.area
                         it[this.region] = reg.regionName
                         it[updateTime] = System.currentTimeMillis() / 1000

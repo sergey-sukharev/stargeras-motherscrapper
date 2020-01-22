@@ -7,9 +7,9 @@ object CountryModel : Table() {
     override val tableName: String
         get() = "country"
 
-    val uuid = varchar("uuid", 36)
-    val id = integer("id").primaryKey() // Column<String>
-    val name = varchar("name", length = 50) // Column<String>
+    val uuid = varchar("uuid", 36).primaryKey()
+    val id = integer("id")
+    val name = varchar("name", length = 100) // Column<String>
     val updateTime = long("update_time")
 }
 
@@ -17,27 +17,27 @@ object RegionModel : Table() {
     override val tableName: String
         get() = "region"
 
-    val uuid = varchar("uuid", 36)
-    val id = integer("id").primaryKey() // Column<String>
-    val name = varchar("name", length = 50) // Column<String>
+    val uuid = varchar("uuid", 36).primaryKey()
+    val id = integer("id")
+    val name = varchar("name", length = 100)
     val updateTime = long("update_time")
-    val country = integer("country_id") references CountryModel.id
+    val country = varchar("country_id", 100) references CountryModel.uuid
 }
 
 object CityModel : Table() {
     override val tableName: String
         get() = "city"
 
-    val uuid = varchar("uuid", 36)
-    val id = integer("id").primaryKey() // Column<String>
-    val name = varchar("name", length = 256) // Column<String>
+    val uuid = varchar("uuid", 36).primaryKey()
+    val id = integer("id")
+    val name = varchar("name", length = 256)
     val area = varchar("area", 50).nullable()
     val region = varchar("region", 50).nullable()
     val updateTime = long("update_time")
-    val region_id = varchar("region_id", 36).nullable()
+    val region_id = varchar("region_id", 36).references(RegionModel.uuid).nullable()
 }
 
-object UpdateHistory: Table() {
+object UpdateHistoryModel: Table() {
     override val tableName: String
         get() = "update_history"
 
@@ -47,11 +47,10 @@ object UpdateHistory: Table() {
     val itemsLoaded = integer("items_loaded")
     val isLoaded = bool("is_loaded")
     val lastUpdateTime = long("last_update_time")
-
-
 }
+
 fun createTable() {
     transaction {
-        SchemaUtils.create(CountryModel, RegionModel, CityModel, UpdateHistory)
+        SchemaUtils.create(CountryModel, RegionModel, CityModel, UpdateHistoryModel)
     }
 }
